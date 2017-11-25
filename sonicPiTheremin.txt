@@ -1,0 +1,5 @@
+live_loop :foo do
+   use_sched_ahead_time! 0.1
+   message = sync “/osc/play_this”
+   play message
+end
