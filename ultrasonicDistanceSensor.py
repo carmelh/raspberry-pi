@@ -1,4 +1,4 @@
-    #Libraries
+#Libraries
 import RPi.GPIO as GPIO
 import time
 
@@ -18,32 +18,38 @@ sender = udp_client.SimpleUDPClient('127.0.0.1',4559)
 GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
 
-# set Trigger to HIGH and after some time return to LOW
-GPIO.output(GPIO_TRIGGER, True)
-time.sleep(0.00001)
-GPIO.output(GPIO_TRIGGER, False)
+try:
+    while True:
+        # set Trigger to HIGH and after some time return to LOW
+        GPIO.output(GPIO_TRIGGER, True)
+        time.sleep(0.00001)
+        GPIO.output(GPIO_TRIGGER, False)
 
-# ECHO trigger - pulse returned
-while GPIO.input(GPIO_ECHO) == 0:
-StartTime = time.time()
+        StopTime = time.time()
 
-# ECHO trigger - pulse returned
-while GPIO.input(GPIO_ECHO) == 1:
-StopTime = time.time()
+        # ECHO trigger - pulse returned
+        while GPIO.input(GPIO_ECHO) == 0:
+            StartTime = time.time()
+            if StartTime - StopTime > 0.5:
+                break
 
+        # ECHO trigger - pulse returned
+        while GPIO.input(GPIO_ECHO) == 1:
+            StopTime = time.time()
 
-# calculate distance    
-# multiply the time with the sonic speed (34300 cm/s)
-#and divide by 2 because it's going there and back
-TimeDifference = StopTime - StartTime
-distance = (TimeDifference * 34300) / 2 
+        # calculate distance
+        # multiply the time with the sonic speed (34300 cm/s)
+        #and divide by 2 because it's going there and back
+        TimeDifference = StopTime - StartTime
+        distance = (TimeDifference * 34300) / 2
 
-pitch = round(distance + 60)
-sender.send_message('/play_this', pitch)
-print ("Pitch = %d" % pitch)
+        pitch = round(distance + 60)
+        if pitch > 50 and pitch < 200:
+            sender.send_message('/play_this', pitch)
+            print ("Pitch = %d" % pitch)
 
-time.sleep(0.1)
+        time.sleep(0.1)
 
-GPIO.cleanup()
-    
-
+except KeyboardInterrupt:
+    print("\nExiting")
+    GPIO.cleanup()
